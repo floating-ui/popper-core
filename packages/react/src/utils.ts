@@ -1,6 +1,19 @@
 import {isHTMLElement, isShadowRoot} from '@floating-ui/utils/dom';
 import type * as React from 'react';
 
+export {
+  isDifferentRow as compositeIsDifferentRow,
+  isIndexOutOfBounds as compositeIsIndexOutOfBounds,
+  getMinIndex as compositeGetMinIndex,
+  getMaxIndex as compositeGetMaxIndex,
+  findNonDisabledIndex as compositeFindNonDisabledIndex,
+  getGridNavigatedIndex as compositeGetGridNavigatedIndex,
+  buildCellMap as compositeBuildCellMap,
+  getCellIndexOfCorner as compositeGetCellIndexOfCorner,
+  getCellIndices as compositeGetCellIndices,
+  isDisabled as compositeIsDisabled,
+} from './utils/composite';
+
 export function activeElement(doc: Document) {
   let activeElement = doc.activeElement;
 
