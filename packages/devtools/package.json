@@ -34,6 +34,12 @@
     "**/*.d.mts"
   ],
   "license": "MIT",
+  "bugs": "https://github.com/floating-ui/floating-ui",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/floating-ui/floating-ui.git",
+    "directory": "packages/devtools"
+  },
   "peerDependencies": {
     "@floating-ui/dom": "^1.0.0"
   },
