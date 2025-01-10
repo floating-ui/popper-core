@@ -6,6 +6,9 @@ import tseslint from 'typescript-eslint';
 import prettierRecommended from 'eslint-plugin-prettier/recommended';
 
 export default tseslint.config(
+  {
+    ignores: ['**/dist/'],
+  },
   eslint.configs.recommended,
   react.configs.flat.recommended,
   tseslint.configs.recommended,
