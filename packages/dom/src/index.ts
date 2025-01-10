@@ -1,5 +1,21 @@
 import {computePosition as computePositionCore} from '@floating-ui/core';
 
+/**
+ * Exports below are here to expose these useful utilities to the users
+ * but are not part of the official API and might be subject to change with future releases.
+ * See more: https://github.com/floating-ui/floating-ui/discussions/3181
+ */
+export {getBoundingClientRect} from './utils/getBoundingClientRect';
+export {getCssDimensions} from './utils/getCssDimensions';
+export {getDocumentRect} from './utils/getDocumentRect';
+export {getHTMLOffset} from './utils/getHTMLOffset';
+export {getRectRelativeToOffsetParent} from './utils/getRectRelativeToOffsetParent';
+export {getViewportRect} from './utils/getViewportRect';
+export {getVisualOffsets} from './utils/getVisualOffsets';
+export {getWindowScrollBarX} from './utils/getWindowScrollBarX';
+export {isStaticPositioned} from './utils/isStaticPositioned';
+export {unwrapElement} from './utils/unwrapElement';
+
 import {platform} from './platform';
 import type {
   ComputePositionConfig,
