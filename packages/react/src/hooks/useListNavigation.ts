@@ -15,7 +15,12 @@ import {
   useFloatingParentNodeId,
   useFloatingTree,
 } from '../components/FloatingTree';
-import type {Dimensions, ElementProps, FloatingRootContext} from '../types';
+import type {
+  Dimensions,
+  ElementProps,
+  FloatingRootContext,
+  Orientation,
+} from '../types';
 import {
   ARROW_DOWN,
   ARROW_LEFT,
@@ -37,6 +42,8 @@ import {useEffectEvent} from './utils/useEffectEvent';
 import {useLatestRef} from './utils/useLatestRef';
 import {warn} from '../utils/log';
 import {getFloatingFocusElement} from '../utils/getFloatingFocusElement';
+
+export const ESCAPE = 'Escape';
 
 function doSwitch(
   orientation: UseListNavigationProps['orientation'],
@@ -94,6 +101,9 @@ function isCrossOrientationCloseKey(
 ) {
   const vertical = rtl ? key === ARROW_RIGHT : key === ARROW_LEFT;
   const horizontal = key === ARROW_UP;
+  if (orientation === 'both') {
+    return key === ESCAPE;
+  }
   return doSwitch(orientation, vertical, horizontal);
 }
 
@@ -196,7 +206,7 @@ export interface UseListNavigationProps {
    * The orientation in which navigation occurs.
    * @default 'vertical'
    */
-  orientation?: 'vertical' | 'horizontal' | 'both';
+  orientation?: Orientation;
   /**
    * Specifies how many columns the list has (i.e., it’s a grid). Use an
    * orientation of 'horizontal' (e.g. for an emoji picker/date picker, where
@@ -289,6 +299,14 @@ export function useListNavigation(
 
   const parentId = useFloatingParentNodeId();
   const tree = useFloatingTree();
+  let parentOrientation: Orientation | undefined = undefined;
+  const parentNode = tree?.nodesRef.current.find(
+    (node) => node.id === parentId,
+  );
+
+  if (parentNode) {
+    parentOrientation = parentNode.context?.orientation;
+  }
 
   const onNavigate = useEffectEvent(() => {
     unstable_onNavigate(indexRef.current === -1 ? null : indexRef.current);
@@ -475,8 +493,7 @@ export function useListNavigation(
     }
 
     const nodes = tree.nodesRef.current;
-    const parent = nodes.find((node) => node.id === parentId)?.context?.elements
-      .floating;
+    const parent = parentNode?.context?.elements.floating;
     const activeEl = activeElement(getDocument(elements.floating));
     const treeContainsActiveEl = nodes.some(
       (node) =>
@@ -486,7 +503,7 @@ export function useListNavigation(
     if (parent && !treeContainsActiveEl && isPointerModalityRef.current) {
       parent.focus({preventScroll: true});
     }
-  }, [enabled, elements.floating, tree, parentId, virtual]);
+  }, [enabled, elements.floating, tree, parentId, virtual, parentNode]);
 
   useModernLayoutEffect(() => {
     if (!enabled) return;
@@ -905,11 +922,20 @@ export function useListNavigation(
         }
 
         if (isNavigationKey) {
-          keyRef.current = nested && isMainKey ? null : event.key;
+          const isParentMainKey = isMainOrientationKey(
+            event.key,
+            parentOrientation,
+          );
+          keyRef.current = nested && isParentMainKey ? null : event.key;
         }
 
         if (nested) {
-          if (isCrossOpenKey) {
+          const isParentCrossOpenKey = isCrossOrientationOpenKey(
+            event.key,
+            parentOrientation,
+            rtl,
+          );
+          if (isParentCrossOpenKey) {
             stopEvent(event);
 
             if (open) {
@@ -973,6 +999,7 @@ export function useListNavigation(
     tree,
     virtual,
     virtualItemRef,
+    parentOrientation,
   ]);
 
   return React.useMemo(

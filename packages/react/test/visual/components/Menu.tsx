@@ -23,6 +23,7 @@ import {
   useRole,
   useTypeahead,
 } from '@floating-ui/react';
+import type {Orientation} from '@floating-ui/react';
 import {ChevronRightIcon} from '@radix-ui/react-icons';
 import c from 'clsx';
 import * as React from 'react';
@@ -54,13 +55,22 @@ interface MenuProps {
   nested?: boolean;
   children?: React.ReactNode;
   keepMounted?: boolean;
+  orientation?: Orientation;
+  cols?: number;
 }
 
 export const MenuComponent = React.forwardRef<
   HTMLButtonElement,
   MenuProps & React.HTMLProps<HTMLButtonElement>
 >(function Menu(
-  {children, label, keepMounted = false, ...props},
+  {
+    children,
+    label,
+    keepMounted = false,
+    cols,
+    orientation: orientationOption,
+    ...props
+  },
   forwardedRef,
 ) {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -75,6 +85,7 @@ export const MenuComponent = React.forwardRef<
   const nodeId = useFloatingNodeId();
   const parentId = useFloatingParentNodeId();
   const isNested = parentId != null;
+  const orientation = orientationOption ?? (cols ? 'both' : 'vertical');
 
   const parent = React.useContext(MenuContext);
   const item = useListItem();
@@ -84,6 +95,7 @@ export const MenuComponent = React.forwardRef<
     open: isOpen,
     onOpenChange: setIsOpen,
     placement: isNested ? 'right-start' : 'bottom-start',
+    orientation,
     middleware: [
       offset({mainAxis: isNested ? 0 : 4, alignmentAxis: isNested ? -4 : 0}),
       flip(),
@@ -109,6 +121,8 @@ export const MenuComponent = React.forwardRef<
     activeIndex,
     nested: isNested,
     onNavigate: setActiveIndex,
+    orientation,
+    cols,
   });
   const typeahead = useTypeahead(context, {
     listRef: labelsRef,
@@ -253,9 +267,16 @@ export const MenuComponent = React.forwardRef<
               >
                 <div
                   ref={refs.setFloating}
-                  className="flex flex-col rounded bg-white shadow-lg outline-none p-1 border border-slate-900/10 bg-clip-padding"
+                  className={c(
+                    'flex flex-col rounded bg-white shadow-lg outline-none p-1 border border-slate-900/10 bg-clip-padding',
+                    {
+                      [`grid grid-cols-${cols} gap-3`]: cols,
+                    },
+                  )}
                   style={{
                     ...floatingStyles,
+                    // @ts-ignore
+                    '--cols': cols,
                     visibility: !keepMounted
                       ? undefined
                       : isOpen
@@ -372,7 +393,7 @@ export const Main = () => {
           <Menu label="Copy as" keepMounted>
             <MenuItem label="Text" />
             <MenuItem label="Video" />
-            <Menu label="Image" keepMounted>
+            <Menu label="Image" keepMounted cols={2}>
               <MenuItem label=".png" />
               <MenuItem label=".jpg" />
               <MenuItem label=".svg" />
