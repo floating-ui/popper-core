@@ -1178,6 +1178,38 @@ test('focus management in nested lists', async () => {
   expect(screen.getByText('Text')).toHaveFocus();
 });
 
+test('keyboard navigation in nested menus lists', async () => {
+  render(<NestedMenu />);
+  await userEvent.click(screen.getByRole('button', {name: 'Edit'}));
+  await userEvent.keyboard('{ArrowDown}');
+  await userEvent.keyboard('{ArrowDown}');
+  await userEvent.keyboard('{ArrowDown}');
+  await userEvent.keyboard('{ArrowRight}'); // opens first submenu
+
+  await userEvent.keyboard('{ArrowDown}');
+  await userEvent.keyboard('{ArrowDown}');
+  await userEvent.keyboard('{ArrowRight}'); // opens second submenu
+
+  expect(screen.getByText('.png')).toHaveFocus();
+
+  // test navigation with orientation = 'both'
+  await userEvent.keyboard('{ArrowRight}');
+  expect(screen.getByText('.jpg')).toHaveFocus();
+
+  await userEvent.keyboard('{ArrowDown}');
+  expect(screen.getByText('.gif')).toHaveFocus();
+
+  await userEvent.keyboard('{ArrowLeft}');
+  expect(screen.getByText('.svg')).toHaveFocus();
+
+  await userEvent.keyboard('{ArrowUp}');
+  expect(screen.getByText('.png')).toHaveFocus();
+
+  // escape closes the submenu
+  await userEvent.keyboard('{Escape}');
+  expect(screen.getByText('Image')).toHaveFocus();
+});
+
 test('virtual nested Home or End key press', async () => {
   const ref = {current: null};
   render(

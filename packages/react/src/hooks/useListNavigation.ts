@@ -38,6 +38,8 @@ import {useLatestRef} from './utils/useLatestRef';
 import {warn} from '../utils/log';
 import {getFloatingFocusElement} from '../utils/getFloatingFocusElement';
 
+export const ESCAPE = 'Escape';
+
 function doSwitch(
   orientation: UseListNavigationProps['orientation'],
   vertical: boolean,
@@ -94,6 +96,9 @@ function isCrossOrientationCloseKey(
 ) {
   const vertical = rtl ? key === ARROW_RIGHT : key === ARROW_LEFT;
   const horizontal = key === ARROW_UP;
+  if (orientation === 'both') {
+    return key === ESCAPE;
+  }
   return doSwitch(orientation, vertical, horizontal);
 }
 
@@ -241,7 +246,7 @@ export function useListNavigation(
   context: FloatingRootContext,
   props: UseListNavigationProps,
 ): ElementProps {
-  const {open, onOpenChange, elements} = context;
+  const {open, onOpenChange, elements, dataRef} = context;
   const {
     listRef,
     activeIndex,
@@ -289,6 +294,10 @@ export function useListNavigation(
 
   const parentId = useFloatingParentNodeId();
   const tree = useFloatingTree();
+
+  useModernLayoutEffect(() => {
+    context.dataRef.current.orientation = orientation;
+  }, [context, orientation]);
 
   const onNavigate = useEffectEvent(() => {
     unstable_onNavigate(indexRef.current === -1 ? null : indexRef.current);
@@ -898,6 +907,9 @@ export function useListNavigation(
           return commonOnKeyDown(event);
         }
 
+        const parentOrientation = tree?.nodesRef.current.find(
+          (node) => node.id === parentId,
+        )?.context?.dataRef?.current.orientation;
         // If a floating element should not open on arrow key down, avoid
         // setting `activeIndex` while it's closed.
         if (!open && !openOnArrowKeyDown && isArrowKey) {
@@ -905,11 +917,20 @@ export function useListNavigation(
         }
 
         if (isNavigationKey) {
-          keyRef.current = nested && isMainKey ? null : event.key;
+          const isParentMainKey = isMainOrientationKey(
+            event.key,
+            parentOrientation,
+          );
+          keyRef.current = nested && isParentMainKey ? null : event.key;
         }
 
         if (nested) {
-          if (isCrossOpenKey) {
+          const isParentCrossOpenKey = isCrossOrientationOpenKey(
+            event.key,
+            parentOrientation,
+            rtl,
+          );
+          if (isParentCrossOpenKey) {
             stopEvent(event);
 
             if (open) {
@@ -968,6 +989,7 @@ export function useListNavigation(
     open,
     openOnArrowKeyDown,
     orientation,
+    parentId,
     rtl,
     selectedIndex,
     tree,
